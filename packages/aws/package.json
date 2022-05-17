@@ -1,0 +1,11 @@
+{
+  "name": "@packages/aws",
+  "version": "0.1.0",
+  "dependencies": {
+    "lodash.get": "^4.4.2"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.644.0",
+    "@types/lodash.get": "^4.4.6"
+  }
+}

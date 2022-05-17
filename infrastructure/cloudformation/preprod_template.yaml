@@ -1,0 +1,200 @@
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  DomainName:
+    Type: String
+  Environment:
+    Type: String
+  Stage:
+    Type: String
+  Bucket:
+    Type: String
+  Prefix:
+    Type: String
+  EnvironmentTag:
+    Type: String
+  ApplicationID:
+    Type: String
+
+Resources:
+  EmpPayslipPostFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs12.x
+      Timeout: 29
+      CodeUri:
+        Bucket: !Ref Bucket
+        Key: !Sub "${Prefix}/functions/employee-payslip/dist/code.zip"
+      Handler: index.handler
+      Environment:
+        Variables:
+          ACCOUNT_ID: !Ref "AWS::AccountId"
+          REGION: !Ref "AWS::Region"
+          ENVIRONMENT: !Ref Environment
+          STAGE: !Ref Stage
+          LOGGING_LEVEL: "50"
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - "states:DescribeExecution"
+                - "states:StartExecution"
+                - "lambda:InvokeFunction"
+              Resource: "*"
+      Events:
+        PayslipApi:
+          Type: Api
+          Properties:
+            Path: "/v1/payslip"
+            Method: "POST"
+            RestApiId: !Ref PayslipApi
+      Tags:
+        ApplicationID: !Ref ApplicationID
+        Environment: !Ref EnvironmentTag
+        
+  PayslipApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${Environment}-${Stage}-payslip-api
+      StageName: development
+      Tags:
+        ApplicationID: !Ref ApplicationID
+        Environment: !Ref EnvironmentTag
+      DefinitionBody:
+        swagger: "2.0"
+        info:
+          title: !Ref AWS::StackName
+        schemes:
+          - "https"
+        paths:
+          /v1/payslip:
+            post:
+              parameters:
+                - in: body
+                  name: body
+                  schema:
+                    type: "object"
+                    required:
+                      - firstName
+                      - lastName
+                      - annualSalary
+                      - superRate
+                      - payPeriod
+                    properties:
+                      firstName:
+                        type: string
+                        title: The firstName schema
+                        description: An explanation about the purpose of this instance.
+                        default: ""
+                      lastName:
+                        type: string
+                        title: The lastName schema
+                        description: An explanation about the purpose of this instance.
+                        default: ""
+                      annualSalary:
+                        type: number
+                        title: The annualSalary schema
+                        description: An explanation about the purpose of this instance.
+                        default: 0
+                      superRate:
+                        type: string
+                        title: The superRate schema
+                        description: An explanation about the purpose of this instance.
+                        default: ""
+                      payPeriod:
+                        type: string
+                        title: The payPeriod schema
+                        description: An explanation about the purpose of this instance.
+                        default: ""
+                      grossIncome:
+                        type: number
+                        title: The grossIncome schema
+                        description: An explanation about the purpose of this instance.
+                        default: 0
+                      incomeTax:
+                        type: number
+                        title: The incomeTax schema
+                        description: An explanation about the purpose of this instance.
+                        default: 0
+                      netIncome:
+                        type: number
+                        title: The netIncome schema
+                        description: An explanation about the purpose of this instance.
+                        default: 0
+                      superAmount:
+                        type: number
+                        title: The superAmount schema
+                        description: An explanation about the purpose of this instance.
+                        default: 0
+              responses:
+                "200":
+                  schema:
+                    type: "object"
+                    required:
+                      - firstName
+                      - lastName
+                      - annualSalary
+                      - superRate
+                      - payPeriod
+                    properties:
+                      firstName:
+                        type: string
+                        title: The firstName Schema
+                        pattern: "^(.*)$"
+                      lastName:
+                        type: string
+                        title: The lastName Schema
+                        pattern: "^(.*)$"
+                      annualSalary:
+                        type: string
+                        title: The annualSalary Schema
+                        pattern: "^(.*)$"
+                      superRate:
+                        type: integer
+                        title: The superRate Schema
+                      payPeriod:
+                        type: string
+                        title: The payPeriod Schema
+                        pattern: "^(.*)$"
+              security:
+                - api_key: []
+              x-amazon-apigateway-integration:
+                uri: !Sub "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:${AWS::AccountId}:function:${EmpPayslipPostFunction}/invocations"
+                passthroughBehavior: "when_no_match"
+                httpMethod: "POST"
+                type: "aws_proxy"
+        securityDefinitions:
+          api_key:
+            type: "apiKey"
+            name: "x-api-key"
+            in: "header"
+
+  BasePathMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    DependsOn: PayslipApidevelopmentStage
+    Properties:
+      BasePath: stage
+      DomainName: !Ref DomainName
+      RestApiId: !Ref PayslipApi
+      Stage: !Ref PayslipApidevelopmentStage
+
+  AssertNotRestDelete:
+    Type: "AWS::CloudFormation::CustomResource"
+    DependsOn: PayslipApi
+    Version: "1.0"
+    Properties:
+      ServiceToken: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:account-extensions-assert-not-base-path"
+      Id: !Ref Prefix
+      RequestTypes:
+        - Delete
+      DomainName: !Ref DomainName
+      RestApiId: !Ref PayslipApi
+      Stage: rest
+      Message: Deletion of rest base path not allowed
+
+Outputs:
+  ApiId:
+    Value: !Ref PayslipApi
+  ApiStage:
+    Value: !Ref PayslipApidevelopmentStage

@@ -1,0 +1,10 @@
+{
+  "name": "@epayslip/common",
+  "version": "1.0.0",
+  "devDependencies": {
+    "mockdate": "^3.0.5"
+  },
+  "dependencies": {
+
+  }
+}

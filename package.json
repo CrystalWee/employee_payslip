@@ -1,0 +1,22 @@
+{
+  "name": "@epayslip",
+  "private": "true",
+  "version": "1.0.0",
+  "workspaces": [
+    "./packages/*",
+    "./functions/*"
+  ],
+  "scripts": {
+    "test": "jest --coverage",
+    "deploy": "cdk deploy -y"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.93",
+    "@types/node": "^17.0.23",
+    "aws-cdk-lib": "^2.19.0"
+  },
+  "dependencies": {
+    "jest": "^28.1.0",
+    "sprintf-js": "^1.1.2"
+  }
+}

@@ -1,0 +1,30 @@
+[
+    {
+      "ParameterKey": "DomainName",
+      "ParameterValue": "epayslip"
+    },
+    {
+      "ParameterKey": "Environment",
+      "ParameterValue": "qa"
+    },
+    {
+      "ParameterKey": "Stage",
+      "ParameterValue": "rest"
+    },
+    {
+      "ParameterKey": "Bucket",
+      "ParameterValue": "preprod-epayslip"
+    },
+    {
+      "ParameterKey": "Prefix",
+      "ParameterValue": "qa"
+    },
+    {
+      "ParameterKey": "EnvironmentTag",
+      "ParameterValue": "test"
+    },
+    {
+      "ParameterKey": "ApplicationID",
+      "ParameterValue": "epay"
+    }
+  ]
